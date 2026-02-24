@@ -8,7 +8,7 @@
     public string Developer { get; set; } = null!;
     public string SourceUrl { get; set; } = null!;
 
-    public DateTime createdAt { get; set; }
+    public DateTime CreatedAt { get; set; }
 
     public ICollection<ProductVersion> Versions { get; set; } = [];
   }
