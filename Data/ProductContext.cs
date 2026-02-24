@@ -8,9 +8,19 @@ namespace SoftwareTracker.Data
     public DbSet<Product> Products { get; set; } = null!;
     public DbSet<ProductVersion> ProductVersions { get; set; } = null!;
 
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    protected override void OnModelCreating(ModelBuilder builder)
     {
-      optionsBuilder.UseNpgsql("<connection string>");
+      base.OnModelCreating(builder);
+
+      // Define relationships
+      builder.Entity<Product>()
+        .HasMany(p => p.Versions)
+        .WithOne(v => v.Product)
+        .HasForeignKey(v => v.ProductId);
+
+      // Deduplication
+      builder.Entity<ProductVersion>()
+        .HasIndex(v => new { v.ProductId, v.Version }).IsUnique();
     }
   }
 }
