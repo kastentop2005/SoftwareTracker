@@ -62,7 +62,7 @@ namespace SoftwareTracker.Application
             VersionNumber = release.TagName ?? release.Name ?? "Unknown",
 
             // Use the date if found, otherwise use current time or null
-            ReleaseDate = release.PublishedAt ?? DateTime.MinValue,
+            ReleaseDate = release.PublishedAt?.ToString("O") ?? DateTime.MinValue.ToString("O"),
 
             // Pick the web link, or the zip link, or the base repo URL
             SourceUrl = release.HtmlUrl ?? release.ZipUrl ?? SourceUrl
