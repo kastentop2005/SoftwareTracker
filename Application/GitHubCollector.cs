@@ -12,6 +12,7 @@ namespace SoftwareTracker.Application
     protected abstract string RepoOwner { get; }
     protected abstract string RepoName { get; }
     protected abstract string ApiEndpoint { get; }
+    public string Developer => RepoOwner;
 
     private record GitHubRelease
     {

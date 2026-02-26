@@ -35,7 +35,7 @@ namespace SoftwareTracker.Application
           {
             Id = Guid.NewGuid(),
             Name = collector.ProductName,
-            Developer = "Unknown",
+            Developer = collector.Developer,
             SourceUrl = collector.SourceUrl,
             CreatedAt = DateTime.UtcNow,
           };
