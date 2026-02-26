@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SoftwareTracker.Data;
 using SoftwareTracker.Model;
@@ -21,18 +16,43 @@ namespace SoftwareTracker.Controllers
             _context = context;
         }
 
-        // GET: api/ProductVersions
+        // GET: api/ProductVersions?page=1&pageSize=20
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ProductVersion>>> GetProductVersions()
+        public async Task<ActionResult<object>> GetProductVersions(
+          [FromQuery] int page = 1,
+          [FromQuery] int pageSize = 20)
         {
-            return await _context.ProductVersions.ToListAsync();
+          if (page < 1) page = 1;
+          if (pageSize < 1) pageSize = 20;
+          if (pageSize > 100) pageSize = 100;
+
+          var totalCount = await _context.ProductVersions.CountAsync();
+          var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+
+          var versions = await _context.ProductVersions
+            .Include(v => v.Product)
+            .OrderByDescending(v => v.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+          return Ok(new
+          {
+            page,
+            pageSize,
+            totalCount,
+            totalPages,
+            data = versions
+          });
         }
 
         // GET: api/ProductVersions/5
         [HttpGet("{id}")]
         public async Task<ActionResult<ProductVersion>> GetProductVersion(Guid id)
         {
-            var productVersion = await _context.ProductVersions.FindAsync(id);
+            var productVersion = await _context.ProductVersions
+                .Include(v => v.Product)
+                .FirstOrDefaultAsync(v => v.Id == id);
 
             if (productVersion == null)
             {
@@ -42,67 +62,38 @@ namespace SoftwareTracker.Controllers
             return productVersion;
         }
 
-        // PUT: api/ProductVersions/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutProductVersion(Guid id, ProductVersion productVersion)
+        // GET: api/ProductVersions/product/5?page=1&pageSize=20
+        [HttpGet("product/{productId}")]
+        public async Task<ActionResult<object>> GetVersionsByProduct(
+          Guid productId,
+          [FromQuery] int page = 1,
+          [FromQuery] int pageSize = 20)
         {
-            if (id != productVersion.Id)
-            {
-                return BadRequest();
-            }
+          if (page < 1) page = 1;
+          if (pageSize < 1) pageSize = 20;
+          if (pageSize > 100) pageSize = 100;
 
-            _context.Entry(productVersion).State = EntityState.Modified;
+          var totalCount = await _context.ProductVersions
+            .Where(v => v.ProductId == productId)
+            .CountAsync();
+          var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
 
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!ProductVersionExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+          var versions = await _context.ProductVersions
+            .Include(v => v.Product)
+            .Where(v => v.ProductId == productId)
+            .OrderByDescending(v => v.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
 
-            return NoContent();
-        }
-
-        // POST: api/ProductVersions
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
-        public async Task<ActionResult<ProductVersion>> PostProductVersion(ProductVersion productVersion)
-        {
-            _context.ProductVersions.Add(productVersion);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetProductVersion", new { id = productVersion.Id }, productVersion);
-        }
-
-        // DELETE: api/ProductVersions/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteProductVersion(Guid id)
-        {
-            var productVersion = await _context.ProductVersions.FindAsync(id);
-            if (productVersion == null)
-            {
-                return NotFound();
-            }
-
-            _context.ProductVersions.Remove(productVersion);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
-
-        private bool ProductVersionExists(Guid id)
-        {
-            return _context.ProductVersions.Any(e => e.Id == id);
+          return Ok(new
+          {
+            page,
+            pageSize,
+            totalCount,
+            totalPages,
+            data = versions
+          });
         }
     }
 }
