@@ -8,6 +8,13 @@ namespace SoftwareTracker.Data
     public DbSet<Product> Products { get; set; } = null!;
     public DbSet<ProductVersion> ProductVersions { get; set; } = null!;
 
+    protected override void OnConfiguring(DbContextOptionsBuilder builder)
+    {
+      base.OnConfiguring(builder);
+
+      builder.UseNpgsql();
+    }
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
       base.OnModelCreating(builder);
