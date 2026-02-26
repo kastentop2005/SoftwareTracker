@@ -1,6 +1,6 @@
 ﻿namespace SoftwareTracker.Application.Products
 {
-  public class FrappeHRCollector : GitHubCollector
+  public class FrappeHRCollector(IHttpClientFactory httpClientFactory) : GitHubCollector(httpClientFactory)
   {
     public override string ProductName => "hrms";
     public override string SourceUrl => "https://github.com/frappe/hrms";

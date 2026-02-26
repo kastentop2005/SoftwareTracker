@@ -1,6 +1,6 @@
 ﻿namespace SoftwareTracker.Application.Products
 {
-  public class ZimbraCollector : GitHubCollector
+  public class ZimbraCollector(IHttpClientFactory httpClientFactory) : GitHubCollector(httpClientFactory)
   {
     public override string ProductName => "Zimbra";
     public override string SourceUrl => "https://github.com/Zimbra/zm-mailbox";

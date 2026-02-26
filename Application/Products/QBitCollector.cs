@@ -1,6 +1,6 @@
 ﻿namespace SoftwareTracker.Application.Products
 {
-  public class QBitCollector : GitHubCollector
+  public class QBitCollector(IHttpClientFactory httpClientFactory) : GitHubCollector(httpClientFactory)
   {
     public override string ProductName => "qBittorrent";
     public override string SourceUrl => "https://github.com/qbittorrent/qBittorrent";

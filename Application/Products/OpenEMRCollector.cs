@@ -1,6 +1,6 @@
 ﻿namespace SoftwareTracker.Application.Products
 {
-  public class OpenEMRCollector : GitHubCollector
+  public class OpenEMRCollector(IHttpClientFactory httpClientFactory) : GitHubCollector(httpClientFactory)
   {
     public override string ProductName => "OpenEMR";
     public override string SourceUrl => "https://github.com/openemr/openemr";
