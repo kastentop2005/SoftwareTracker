@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace SoftwareTracker.Data
 {
-  public class ProductContext : DbContext
+  public class ProductContext(DbContextOptions<ProductContext> options) : DbContext(options)
   {
     public DbSet<Product> Products { get; set; } = null!;
     public DbSet<ProductVersion> ProductVersions { get; set; } = null!;
