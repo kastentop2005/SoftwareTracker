@@ -1,10 +1,20 @@
-using Microsoft.EntityFrameworkCore;
 using SoftwareTracker.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Define secret connection string
-builder.Services.AddDbContext<ProductContext>(options =>
-  options.UseNpgsql(builder.Configuration.GetConnectionString("SoftwareTracker")));
+builder.Services.AddControllers();
+builder.Services.AddOpenApi();
+builder.Services.AddDbContext<ProductContext>();
 
 var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
+{
+  app.MapOpenApi();
+}
+
+app.UseHttpsRedirection();
+app.UseAuthorization();
+app.MapControllers();
+
+app.Run();
