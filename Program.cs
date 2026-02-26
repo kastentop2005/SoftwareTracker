@@ -7,10 +7,20 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
-builder.Services.AddDbContext<ProductContext>(options => 
+
+// Configure PostgreSQL connection from user secrets
+builder.Services.AddDbContext<ProductContext>(options =>
   options.UseNpgsql(builder.Configuration.GetConnectionString("SoftwareTracker")));
 
-// Register collcetors
+// Configure HttpClient for GitHub API
+builder.Services.AddHttpClient("GitHub", client =>
+{
+  client.BaseAddress = new Uri("https://api.github.com/");
+  client.DefaultRequestHeaders.Add("User-Agent", "SoftwareTracker-App");
+  client.Timeout = TimeSpan.FromSeconds(30);
+});
+
+// Register collectors
 builder.Services.AddScoped<IVersionCollector, AFFiNECollector>();
 builder.Services.AddScoped<IVersionCollector, ZimbraCollector>();
 builder.Services.AddScoped<IVersionCollector, QBitCollector>();
