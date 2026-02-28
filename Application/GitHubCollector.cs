@@ -94,11 +94,23 @@ namespace SoftwareTracker.Application
             releaseDate = await GetCommitDateAsync(httpClient, release.Commit.Url);
           }
 
+          // Construct proper github.com URL
+          string sourceUrl = release.HtmlUrl ?? string.Empty;
+          if (string.IsNullOrEmpty(sourceUrl) && !string.IsNullOrEmpty(release.TagName))
+          {
+            // For tags without HtmlUrl, construct the releases/tag URL
+            sourceUrl = $"https://github.com/{RepoOwner}/{RepoName}/releases/tag/{release.TagName}";
+          }
+          if (string.IsNullOrEmpty(sourceUrl))
+          {
+            sourceUrl = SourceUrl;
+          }
+
           var dto = new CollectedVersion
           {
             VersionNumber = release.TagName ?? release.Name ?? "Unknown",
             ReleaseDate = releaseDate?.ToString("O") ?? string.Empty,
-            SourceUrl = release.HtmlUrl ?? release.ZipUrl ?? SourceUrl
+            SourceUrl = sourceUrl
           };
           collectedVersions.Add(dto);
         }
