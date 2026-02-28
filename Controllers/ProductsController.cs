@@ -37,9 +37,9 @@ namespace SoftwareTracker.Controllers
       [FromQuery] int page = 1,
       [FromQuery] int pageSize = 20)
     {
+      // Enforce valid pagination parameters
       if (page < 1) page = 1;
-      if (pageSize < 1) pageSize = 20;
-      if (pageSize > 100) pageSize = 100;
+      if (pageSize < 1 || pageSize > 100) pageSize = 20;
 
       // Check if product exists
       var productExists = await _context.Products.AnyAsync(p => p.Id == productId);
@@ -67,6 +67,54 @@ namespace SoftwareTracker.Controllers
 
       return Ok(new
       {
+        total,
+        page,
+        pageSize,
+        items
+      });
+    }
+
+    // GET: api/products/by-name/{productName}/versions?page=1&pageSize=20
+    [HttpGet("by-name/{productName}/versions")]
+    public async Task<ActionResult<object>> GetProductVersionsByName(
+      string productName,
+      [FromQuery] int page = 1,
+      [FromQuery] int pageSize = 20)
+    {
+      // Enforce valid pagination parameters
+      if (page < 1) page = 1;
+      if (pageSize < 1 || pageSize > 100) pageSize = 20;
+
+      // Find product by name (case-insensitive)
+      var product = await _context.Products
+        .FirstOrDefaultAsync(p => p.Name.ToLower() == productName.ToLower());
+
+      if (product == null)
+      {
+        return NotFound(new { message = $"Product '{productName}' not found" });
+      }
+
+      var total = await _context.ProductVersions
+        .Where(v => v.ProductId == product.Id)
+        .CountAsync();
+
+      var items = await _context.ProductVersions
+        .Where(v => v.ProductId == product.Id)
+        .OrderByDescending(v => v.ReleaseDate) // Sort by release date, newest first
+        .Skip((page - 1) * pageSize)
+        .Take(pageSize)
+        .Select(v => new
+        {
+          version = v.Version,
+          releaseDate = v.ReleaseDate,
+          sourceUrl = v.SourceUrl
+        })
+        .ToListAsync();
+
+      return Ok(new
+      {
+        productId = product.Id,
+        productName = product.Name,
         total,
         page,
         pageSize,
