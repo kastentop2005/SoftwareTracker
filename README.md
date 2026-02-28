@@ -4,6 +4,7 @@ This is a .NET 10 ASP.NET Core Web API backend service that:
 1. Collects software version data from the internet (GitHub API)
 2. Saves it into a PostgreSQL database
 3. Exposes the data via REST API with pagination
+
 This is a simplified real-world backend system.
 ## Technology stack
 | Category        | Used                  |
