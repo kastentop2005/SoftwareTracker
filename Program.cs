@@ -12,11 +12,21 @@ builder.Services.AddOpenApi();
 builder.Services.AddDbContext<ProductContext>(options =>
   options.UseNpgsql(builder.Configuration.GetConnectionString("SoftwareTracker")));
 
-// Configure HttpClient for GitHub API
+// Configure HttpClient for GitHub API with authentication
+var githubToken = builder.Configuration["GitHub:Token"];
 builder.Services.AddHttpClient("GitHub", client =>
 {
   client.BaseAddress = new Uri("https://api.github.com/");
   client.DefaultRequestHeaders.Add("User-Agent", "SoftwareTracker-App");
+  client.DefaultRequestHeaders.Add("Accept", "application/vnd.github+json");
+  client.DefaultRequestHeaders.Add("X-GitHub-Api-Version", "2022-11-28");
+  
+  // Add authentication if token is provided
+  if (!string.IsNullOrWhiteSpace(githubToken))
+  {
+    client.DefaultRequestHeaders.Add("Authorization", $"Bearer {githubToken}");
+  }
+  
   client.Timeout = TimeSpan.FromSeconds(30);
 });
 
