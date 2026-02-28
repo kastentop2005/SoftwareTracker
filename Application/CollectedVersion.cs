@@ -59,11 +59,17 @@ namespace SoftwareTracker.Application
             Id = Guid.NewGuid(),
             ProductId = product.Id,
             Version = collectedVersion.VersionNumber,
+            // Skip versions with no release date
             ReleaseDate = collectedVersion.ReleaseDate,
             SourceUrl = collectedVersion.SourceUrl,
             CreatedAt = DateTime.UtcNow
           };
-          product.Versions.Add(productVersion);
+
+          // Only add if we have a valid release date
+          if (!string.IsNullOrWhiteSpace(collectedVersion.ReleaseDate))
+          {
+            product.Versions.Add(productVersion);
+          }
         }
       }
 

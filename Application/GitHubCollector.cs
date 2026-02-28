@@ -30,6 +30,39 @@ namespace SoftwareTracker.Application
 
       [JsonPropertyName("zipball_url")]
       public string? ZipUrl { get; set; }
+
+      [JsonPropertyName("commit")]
+      public GitHubCommitRef? Commit { get; set; }
+    }
+
+    private record GitHubCommitRef
+    {
+      [JsonPropertyName("sha")]
+      public string? Sha { get; set; }
+
+      [JsonPropertyName("url")]
+      public string? Url { get; set; }
+    }
+
+    private record GitHubCommitDetail
+    {
+      [JsonPropertyName("commit")]
+      public GitHubCommitInfo? Commit { get; set; }
+    }
+
+    private record GitHubCommitInfo
+    {
+      [JsonPropertyName("author")]
+      public GitHubAuthor? Author { get; set; }
+
+      [JsonPropertyName("committer")]
+      public GitHubAuthor? Committer { get; set; }
+    }
+
+    private record GitHubAuthor
+    {
+      [JsonPropertyName("date")]
+      public DateTime? Date { get; set; }
     }
 
     public async Task<IReadOnlyCollection<CollectedVersion>> CollectAsync()
@@ -53,10 +86,18 @@ namespace SoftwareTracker.Application
 
         foreach (var release in releases)
         {
+          DateTime? releaseDate = release.PublishedAt;
+
+          // If PublishedAt is null (tags endpoint), fetch commit date
+          if (releaseDate == null && release.Commit?.Url != null)
+          {
+            releaseDate = await GetCommitDateAsync(httpClient, release.Commit.Url);
+          }
+
           var dto = new CollectedVersion
           {
             VersionNumber = release.TagName ?? release.Name ?? "Unknown",
-            ReleaseDate = release.PublishedAt?.ToString("O") ?? DateTime.MinValue.ToString("O"),
+            ReleaseDate = releaseDate?.ToString("O") ?? string.Empty,
             SourceUrl = release.HtmlUrl ?? release.ZipUrl ?? SourceUrl
           };
           collectedVersions.Add(dto);
@@ -73,6 +114,26 @@ namespace SoftwareTracker.Application
       {
         Console.WriteLine($"Failed to parse response for {ProductName}: {ex.Message}");
         return [];
+      }
+    }
+
+    private async Task<DateTime?> GetCommitDateAsync(HttpClient httpClient, string commitUrl)
+    {
+      try
+      {
+        var response = await httpClient.GetAsync(commitUrl);
+        response.EnsureSuccessStatusCode();
+
+        string jsonResponse = await response.Content.ReadAsStringAsync();
+        var commitDetail = JsonSerializer.Deserialize<GitHubCommitDetail>(jsonResponse);
+
+        // Prefer committer date (when it was added to the repo) over author date
+        return commitDetail?.Commit?.Committer?.Date ?? commitDetail?.Commit?.Author?.Date;
+      }
+      catch
+      {
+        // If we can't fetch commit date, return null
+        return null;
       }
     }
   }
