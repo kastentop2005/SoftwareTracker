@@ -60,7 +60,7 @@ namespace SoftwareTracker.Controllers
         .Select(v => new
         {
           version = v.Version,
-          releaseDate = v.ReleaseDate,
+          releaseDate = FormatReleaseDate(v.ReleaseDate),
           sourceUrl = v.SourceUrl
         })
         .ToListAsync();
@@ -106,7 +106,7 @@ namespace SoftwareTracker.Controllers
         .Select(v => new
         {
           version = v.Version,
-          releaseDate = v.ReleaseDate,
+          releaseDate = FormatReleaseDate(v.ReleaseDate),
           sourceUrl = v.SourceUrl
         })
         .ToListAsync();
@@ -136,6 +136,22 @@ namespace SoftwareTracker.Controllers
       }
 
       return product;
+    }
+
+    private static string FormatReleaseDate(string releaseDate)
+    {
+      if (string.IsNullOrWhiteSpace(releaseDate))
+      {
+        return string.Empty;
+      }
+
+      // Try to parse and format as yyyy-MM-dd
+      if (DateTime.TryParse(releaseDate, out DateTime date))
+      {
+        return date.ToString("yyyy-MM-dd");
+      }
+
+      return releaseDate;
     }
   }
 }
